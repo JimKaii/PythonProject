@@ -38,13 +38,24 @@
         <label for="location">請輸入區域名稱：</label>
         <input type="text" id="location" name="location" required><br><br>
 
-        <label for="time">請輸入查詢時間（格式: YYYY-MM-DD HH:MM）：</label>
-        <input type="text" id="time" name="time" required><br><br>
-
         <button type="submit">查詢天氣</button>
     </form>
 
-    {% if weather_info %}
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+    {% else %}
+    <h2>📍 {{ weather_info.city }} 的天氣資訊</h2>
+    <p>🌡 溫度: {{ weather_info.temperature }}°C</p>
+    <p>🌤 天氣: {{ weather_info.weather }}</p>
+    <p>🌤 天氣: {{ weather_info.weather_description }}</p>
+    <h3>📸 拍照建議：</h3>
+    <ul>
+        {% for suggestion in suggestions %}
+            <li>{{ suggestion }}</li>  <!-- ✅ 顯示建議 -->
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <!-- {% if weather_info %}
         <table>
             <tr>
                 <th>城市</th>
@@ -73,6 +84,6 @@
         </div>
     {% elif error %}
         <p class="error">{{ error }}</p>
-    {% endif %}
+    {% endif %} -->
 </body>
 </html>
