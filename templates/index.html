@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>滾動選擇欄範例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #selectedValue {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>選擇一個區域</h2>
+        <!-- 滾動選擇欄 -->
+        <select id="locationSelect">
+            <option value="北區">北區</option>
+            <option value="南區">南區</option>
+            <option value="中區">中區</option>
+            <option value="西區">西區</option>
+            <option value="西屯區">西屯區</option>
+            <option value="北屯區">北屯區</option>
+            <option value="南屯區">南屯區</option>
+        </select>
+
+        <!-- 確認按鈕 -->
+        <button id="submitButton">確認選擇</button>
+
+        <!-- 顯示選擇的區域 -->
+        <div id="selectedValue"></div>
+    </div>
+
+    <script>
+         // 當按鈕被點擊時，發送 AJAX 請求到後端
+    document.getElementById('submitButton').addEventListener('click', function() {
+        var selectedOption = document.getElementById('locationSelect').value;
+
+        // 發送 AJAX 請求
+        fetch(`/get_coordinates?city_name=${selectedOption}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('selectedValue').textContent = data.error;
+                } else {
+                    // 取得經緯度後，將使用者重定向到 weather.html，並傳遞參數
+                    const { latitude, longitude, city } = data;
+
+                    // 使用 URLSearchParams 傳遞參數到 weather.html
+                    const queryString = new URLSearchParams({
+                        city: city,
+                        lat: latitude,
+                        lng: longitude
+                    }).toString();
+
+                    // 進行頁面重定向
+                    window.location.href = `/weather?${queryString}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天氣查詢</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .error {
+            color: red;
+        }
+        .advice {
+            margin-top: 20px;
+            font-weight: bold;
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>查詢天氣</h1>
+    <div class="container">
+        <h2>選擇一個區域</h2>
+        <!-- 滾動選擇欄 -->
+        <select id="locationSelect">
+            <option value="北區">北區</option>
+            <option value="南區">南區</option>
+            <option value="中區">中區</option>
+            <option value="西區">西區</option>
+            <option value="西屯區">西屯區</option>
+            <option value="北屯區">北屯區</option>
+            <option value="南屯區">南屯區</option>
+        </select>
+
+        <!-- 確認按鈕 -->
+        <button id="submitButton">確認選擇</button>
+
+        <!-- 顯示選擇的區域 -->
+        <div id="selectedValue"></div>
+    </div>
+    <!-- <form method="get" action="/weather">
+        <label for="location">請輸入區域名稱：</label>
+        <input type="text" id="location" name="location" required><br><br>
+
+        <button type="submit">查詢天氣</button> -->
+    </form>
+
+    {% if weather_info %}
+        <ul>
+        {% for info in weather_info %}
+            <li>
+                <strong>區域：</strong>{{ info['district_name'] }} <br>
+                <strong>溫度：</strong>{{ info['temperature'] }}°C <br>
+                <strong>天氣現象：</strong>{{ info['weather'] }} <br>
+                <strong>天氣描述：</strong>{{ info['weather_description'] }} <br>
+                <strong>降雨時間：</strong>{{ info['startime'] }} <br>
+            </li>
+        {% endfor %}
+    {% endif %}
+    
+    
+</body>
+</html>
