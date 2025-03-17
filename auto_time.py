@@ -15,7 +15,7 @@ def get_nearest_time():
     nearest_hour = min(available_hours, key=lambda x: abs(x - current_hour))
 
     nearest_time = now.replace(hour=nearest_hour, minute=0, second=0, microsecond=0)
-    return nearest_time.strftime("%Y-%m-%d %H:%M:%S")
+    return nearest_time.strftime("%Y-%m-%dT%H:%M:%S")
 
 # 測試看看
 print("最近的時段是：", get_nearest_time())

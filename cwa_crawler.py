@@ -2,6 +2,16 @@ import requests
 import os
 from datetime import datetime
 import pytz
+import json
+
+def save_weather_data_to_json(weather_data, filename="weather_data.json"):
+    """
+    將天氣資料保存到 JSON 檔案。
+    """
+    with open(filename, "w", encoding="utf-8") as json_file:
+        json.dump(weather_data, json_file, ensure_ascii=False, indent=4)
+        print(f"天氣資料已儲存至w {filename}")
+
 def get_weather_data(cwa_api_key: str, location_name: str):
     """
     根據提供的 API key 和位置名稱，從中央氣象局 API 獲取天氣資料。
@@ -18,6 +28,10 @@ def get_weather_data(cwa_api_key: str, location_name: str):
     response = requests.get(url, headers=header, params=parameters)
     
     if response.status_code == 200:
+        save_weather_data_to_json(weather_data=response.json())
+        # with open("data.txt", 'w') as out:
+        #     out.write(response.text)
+        # print(response.json())
         return response.json()
     else:
         print("Requests Failed with status code:", response.status_code)
@@ -30,8 +44,8 @@ def extract_weather_info(weather_data, location_name, query_time):
     從獲取的天氣資料中提取城市名稱、區域名稱、溫度、天氣現象及降雨機率。
     返回一個字典，包含指定區域的天氣資料。
     """
+   
     weather_info = []
-
     if weather_data:
         # 迭代所有區域資料
         for location in weather_data['records']['Locations'][0]['Location']:
@@ -40,54 +54,82 @@ def extract_weather_info(weather_data, location_name, query_time):
 
             # 如果區域名稱與用戶輸入的名稱匹配，則提取資料
             if district_name == location_name:
-                temperature = None
-                weather = None
-                weather_description  = None
-                precipitation = None
+                # temperature = None
+                # weather = None
+                # weather_description  = None
+                # precipitation = None
                 
+                temperatures = list()
+                weathers = list()
+                weather_descriptions = list()
+                start_times = list()
                 # 提取溫度與天氣現象資料
                 for weather_element in location['WeatherElement']:
                     # 提取溫度
                     if weather_element['ElementName'] == "溫度":
-                        for time in weather_element['Time']:
-                            temperature = time['ElementValue'][0]['Temperature']
+                        # for time in weather_element['Time']:
+                        #     temperature = time['ElementValue'][0]['Temperature']
+                        temperatures = [
+                            time['ElementValue'][0]['Temperature']
+                            for time in weather_element['Time']
+                        ]
 
                     # 提取天氣現象
                     if weather_element['ElementName'] == "天氣現象":
-                        for time in weather_element['Time']:
-                            weather = time['ElementValue'][0]['Weather']
-                
-                # 提取降雨機率資料
-                for weather_element in location['WeatherElement']:
-                    if weather_element['ElementName'] == "3小時降雨機率":
-                        for time in weather_element['Time']:
-                            precipitation = time['ElementValue'][0]['ProbabilityOfPrecipitation']
-                            start_time = time['StartTime']
-                            # end_time = time['EndTime']
+                        # for time in weather_element['Time']:
+                        #     weather = time['ElementValue'][0]['Weather']
+                        weathers = [
+                            time['ElementValue'][0]['Weather']
+                            for time in weather_element['Time']
+                        ]
 
-                for weather_element in location["WeatherElement"]:
+                    # 天氣描述
                     if weather_element["ElementName"] == "天氣預報綜合描述":
-                        for time in weather_element["Time"]:  # 這裡才有 "Time"
-                            weather_description = time["ElementValue"][0]['WeatherDescription']# 取出天氣描述
+                        # for time in weather_element["Time"]:  
+                        #     weather_description = time["ElementValue"][0]['WeatherDescription']# 取出天氣描述
+                        weather_descriptions = [
+                            time['ElementValue'][0]['WeatherDescription']
+                            for time in weather_element['Time']
+                        ]
+                    #降雨時間
+                    if weather_element["ElementName"] == "天氣預報綜合描述":
+                        start_times = [
+                            time['StartTime']
+                            for time in weather_element['Time']
+                        ]
+                        
+                    # print(start_times)
+                # 提取降雨機率資料
+                # for weather_element in location['WeatherElement']:
+                #     if weather_element['ElementName'] == "3小時降雨機率":
+                #         for time in weather_element['Time']:
+                #             precipitation = time['ElementValue'][0]['ProbabilityOfPrecipitation']
+                #             start_time = time['StartTime']
+                #             end_time = time['EndTime']
+                #             # 格式化時間
+                #             start_time = datetime.fromisoformat(start_time[:-6])  # 去掉時區部分
+                #             # end_time_obj = datetime.fromisoformat(end_time[:-6])  # 去掉時區部分
+                #             # query_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+                #             # query_time = start_time_obj.strftime("%Y-%m-%d %H:%M")
+                #             formatted_end_time = start_time.strftime("%Y-%m-%d %H:%M")
+
+                # for weather_element in location["WeatherElement"]:
+                #     if weather_element["ElementName"] == "天氣預報綜合描述":
+                #         for time in weather_element["Time"]:  
+                #             weather_description = time["ElementValue"][0]['WeatherDescription']# 取出天氣描述
 
                             
-                            # 格式化時間
-                            start_time_obj = datetime.fromisoformat(start_time[:-6])  # 去掉時區部分
-                            # end_time_obj = datetime.fromisoformat(end_time[:-6])  # 去掉時區部分
-                            # query_time = datetime.now().strftime("%Y-%m-%d %H:%M")
-                            query_time = start_time_obj.strftime("%Y-%m-%d %H:%M")
-                            # formatted_end_time = end_time_obj.strftime("%Y-%m-%d %H:%M")
-
-                            weather_info.append({
-                                'city_name': city_name,
-                                'district_name': district_name,
-                                'temperature': temperature,
-                                'weather': weather,
-                                'precipitation': f"{precipitation}%",
-                                'rain_time': query_time,
-                                'weather_description': weather_description
-                            })
-    
+                            
+                for temperature, weather, descibe, start_times in zip(temperatures, weathers, weather_descriptions, start_times):
+                    weather_info.append({
+                        'city_name': city_name,
+                        'district_name': district_name,
+                        'temperature': temperature,
+                        'weather': weather,
+                        'weather_description': descibe,
+                        'startime': start_times
+                    })
+    print(type(weather_info))
     return weather_info
 
 
@@ -99,7 +141,7 @@ def print_weather_info(weather_info):
         for info in weather_info:
             print(f"城市: {info['city_name']}, 區域: {info['district_name']}, "
                   f"溫度: {info['temperature']}°C, 天氣現象: {info['weather']}, "
-                  f"降雨機率: {info['precipitation']} ({info['rain_time']},"
+                  f"降雨時間:{info['startime']},"
                   f"天氣描述: {info['weather_description']}"
                   )
     else:
