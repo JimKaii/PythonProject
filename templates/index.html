@@ -54,58 +54,110 @@
     </style>
 </head>
 <body>
-
+    
     <div class="container">
-        <h2>選擇一個區域</h2>
-        <!-- 滾動選擇欄 -->
-        <select id="locationSelect">
-            <option value="北區">北區</option>
-            <option value="南區">南區</option>
-            <option value="中區">中區</option>
-            <option value="西區">西區</option>
-            <option value="西屯區">西屯區</option>
-            <option value="北屯區">北屯區</option>
-            <option value="南屯區">南屯區</option>
+        <h2>台中市區域選擇</h2>
+    
+        <!-- 第一個選單：選擇區域類型 -->
+        <label for="regionSelect">選擇區域類型：</label>
+        <select id="regionSelect">
+            <option value="山線">山線</option>
+            <option value="海線">海線</option>
+            <option value="屯區">屯區</option>
+            <option value="都心">都心</option>
         </select>
-
-        <!-- 確認按鈕 -->
-        <button id="submitButton">確認選擇</button>
-
-        <!-- 顯示選擇的區域 -->
-        <div id="selectedValue"></div>
+    
+        <!-- 第二個選單：選擇具體區域 -->
+        <label for="locationSelect">選擇具體區域：</label>
+        <select id="locationSelect">
+            <!-- 這裡會動態更新選項 -->
+        </select>
+    
+        <!-- 確定按鈕 -->
+        <button id="confirmButton">確定</button>
+    
+        <!-- 顯示選擇結果 -->
+        <div id="result" style="margin-top: 20px;">
+            <p>您選擇的區域：<span id="selectedRegion"></span> - <span id="selectedLocation"></span></p>
+        </div>
     </div>
-
+    
     <script>
-         // 當按鈕被點擊時，發送 AJAX 請求到後端
-    document.getElementById('submitButton').addEventListener('click', function() {
-        var selectedOption = document.getElementById('locationSelect').value;
-
-        // 發送 AJAX 請求
-        fetch(`/get_coordinates?city_name=${selectedOption}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    document.getElementById('selectedValue').textContent = data.error;
-                } else {
-                    // 取得經緯度後，將使用者重定向到 weather.html，並傳遞參數
-                    const { latitude, longitude, city } = data;
-
-                    // 使用 URLSearchParams 傳遞參數到 weather.html
-                    const queryString = new URLSearchParams({
-                        city: city,
-                        lat: latitude,
-                        lng: longitude
-                    }).toString();
-
-                    // 進行頁面重定向
-                    window.location.href = `/weather?${queryString}`;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+        const regionSelect = document.getElementById('regionSelect');
+        const locationSelect = document.getElementById('locationSelect');
+        const confirmButton = document.getElementById('confirmButton');
+        const selectedRegion = document.getElementById('selectedRegion');
+        const selectedLocation = document.getElementById('selectedLocation');
+    
+        // 定義每個區域類型對應的區域
+        const regions = {
+            '山線': [
+                '后里區', '神岡區', '大雅區', '豐原區', '潭子區', '石岡區', '東勢區', '新社區', '和平區'
+            ],
+            '海線': [
+                '大安區', '大甲區', '外埔區', '沙鹿區', '清水區', '梧棲區', '龍井區', '大肚區'
+            ],
+            '屯區': [
+                '烏日區', '大里區', '霧峰區', '太平區'
+            ],
+            '都心': [
+                '北區', '中區', '東區', '西區', '南區', '西屯區', '南屯區', '北屯區'
+            ]
+        };
+    
+        // 當區域類型改變時，更新具體區域選單
+        regionSelect.addEventListener('change', function() {
+            const selectedRegionValue = regionSelect.value;
+            const locations = regions[selectedRegionValue] || [];
+    
+            // 清空具體區域選單
+            locationSelect.innerHTML = '';
+    
+            // 根據選擇的區域類型動態生成選項
+            locations.forEach(function(location) {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationSelect.appendChild(option);
             });
-    });
+        });
+    
+        // 初始化選擇山線的區域
+        regionSelect.dispatchEvent(new Event('change'));
+    
+        // 當按下確定按鈕時，顯示選擇的區域並跳轉
+        confirmButton.addEventListener('click', function() {
+            const region = regionSelect.value;
+            const location = locationSelect.value;
+    
+            // 顯示用戶選擇的結果
+            selectedRegion.textContent = region;
+            selectedLocation.textContent = location;
+    
+            // 發送 AJAX 請求
+            fetch(`/get_coordinates?city_name=${location}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('selectedValue').textContent = data.error;
+                    } else {
+                        // 取得經緯度後，將使用者重定向到 weather.html，並傳遞參數
+                        const { latitude, longitude, city } = data;
+    
+                        const queryString = new URLSearchParams({
+                            city: city,
+                            lat: latitude,
+                            lng: longitude
+                        }).toString();
+    
+                        // 進行跳轉
+                        window.location.href = `/weather?${queryString}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
     </script>
-
 </body>
 </html>

@@ -29,36 +29,32 @@
             font-weight: bold;
             color: blue;
         }
+        /* 地圖樣式 */
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
+    
     <h1>查詢天氣</h1>
     <div class="container">
         <h2>選擇一個區域</h2>
-        <!-- 滾動選擇欄 -->
         <select id="locationSelect">
-            <option value="北區">北區</option>
-            <option value="南區">南區</option>
-            <option value="中區">中區</option>
-            <option value="西區">西區</option>
-            <option value="西屯區">西屯區</option>
-            <option value="北屯區">北屯區</option>
-            <option value="南屯區">南屯區</option>
+            {% for location in locations %}
+                <option value="{{ location }}" {% if location == city_name %}selected{% endif %}>
+                    {{ location }}
+                </option>
+            {% endfor %}
         </select>
-
-        <!-- 確認按鈕 -->
         <button id="submitButton">確認選擇</button>
-
-        <!-- 顯示選擇的區域 -->
         <div id="selectedValue"></div>
     </div>
-    <!-- <form method="get" action="/weather">
-        <label for="location">請輸入區域名稱：</label>
-        <input type="text" id="location" name="location" required><br><br>
 
-        <button type="submit">查詢天氣</button> -->
-    </form>
-
+    <div id="map"></div>
+    <h2>天氣資訊</h2>
     {% if weather_info %}
         <ul>
         {% for info in weather_info %}
@@ -70,7 +66,146 @@
                 <strong>降雨時間：</strong>{{ info['startime'] }} <br>
             </li>
         {% endfor %}
+        </ul>
     {% endif %}
+    
+    <h2>拍攝建議</h2>
+    <p>{{ shooting_advice }}</p>
+    
+    <script>
+        const locationCoordinates = {
+            '中區': { lat: 24.1469, lng: 120.6832 },
+            '東區': { lat: 24.1460, lng: 120.7219 },
+            '南區': { lat: 24.1411, lng: 120.6744 },
+            '西區': { lat: 24.1439, lng: 120.6627 },
+            '北區': { lat: 24.1644, lng: 120.6830 },
+            '西屯區': { lat: 24.1686, lng: 120.6418 },
+            '南屯區': { lat: 24.1429, lng: 120.6547 },
+            '北屯區': { lat: 24.1790, lng: 120.6870 },
+            '太平區': { lat: 24.1417, lng: 120.7210 },
+            '大里區': { lat: 24.2203, lng: 120.6822 },
+            '霧峰區': { lat: 24.1850, lng: 120.7377 },
+            '烏日區': { lat: 24.1456, lng: 120.5835 },
+            '豐原區': { lat: 24.2615, lng: 120.7320 },
+            '后里區': { lat: 24.3092, lng: 120.7064 },
+            '石岡區': { lat: 24.2545, lng: 120.7463 },
+            '東勢區': { lat: 24.2956, lng: 120.8577 },
+            '大甲區': { lat: 24.3153, lng: 120.6161 },
+            '清水區': { lat: 24.3180, lng: 120.4533 },
+            '沙鹿區': { lat: 24.2357, lng: 120.5955 },
+            '梧棲區': { lat: 24.2355, lng: 120.5033 },
+            '龍井區': { lat: 24.2074, lng: 120.5374 },
+            '大肚區': { lat: 24.2117, lng: 120.5529 },
+            '大安區': { lat: 24.4244, lng: 120.4916 },
+            '健行區': { lat: 24.1821, lng: 120.7607 },
+            '大雅區': { lat: 24.2554, lng: 120.6157 },
+            '神岡區': { lat: 24.2965, lng: 120.6847 },
+            '新社區': { lat: 24.2701, lng: 120.8912 }
+        };
+
+        let currentMarker = null;
+        const googleMapsApiKey = "{{ GOOGLE_MAPS_API_KEY }}";
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        document.body.appendChild(script);
+    // 使用 HTML5 Geolocation API 來獲取用戶當前位置
+    function getUserLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    initMap(lat, lng);  // 使用獲取的緯度和經度初始化地圖
+                },
+                function (error) {
+                    console.error("定位失敗: " + error.message);
+                    alert("無法獲取您的位置，將使用預設位置。");
+                    const defaultCoordinates = locationCoordinates['中區'];  // 這裡用中區為預設位置
+                    initMap(defaultCoordinates.lat, defaultCoordinates.lng);
+                }
+            );
+        } else {
+            alert("瀏覽器不支援定位功能！");
+        }
+    } // 用於追踪當前地圖上的標記
+
+        // 初始化地圖
+        function initMap(lat, lng) {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: { lat, lng },
+            });
+
+            // 如果已經有標記，刪除舊標記
+            if (currentMarker) {
+                currentMarker.setMap(null);
+            }
+
+            // 新的標記
+            currentMarker = new google.maps.Marker({
+                position: { lat, lng },
+                map: map,
+            });
+        }
+
+        window.onload = function () {
+            // 選擇區域的座標
+            const selectedLocation = document.getElementById("locationSelect").value
+            const coordinates = locationCoordinates[selectedLocation];
+            initMap(coordinates.lat, coordinates.lng);
+        };
+
+        document.getElementById("submitButton").onclick = function () {
+            const selectedLocation = document.getElementById("locationSelect").value;
+            document.getElementById("selectedValue").innerText = "你選擇的區域是：" + selectedLocation;
+
+            const coordinates = locationCoordinates[selectedLocation];
+            console.log(coordinates.lat, coordinates.lng)
+            const queryString = new URLSearchParams({
+                city: selectedLocation,
+                lat: coordinates.lat,
+                lng: coordinates.lng
+            }).toString();
+            window.location.href = `/weather?${queryString}`;
+            // if (coordinates) {
+            //     // 更新地圖
+            //     initMap(coordinates.lat, coordinates.lng);
+                
+            //     // 取得天氣資料並顯示
+            //     fetch(`/weather?city=${selectedLocation}&lat=${coordinates.lat}&lng=${coordinates.lng}`)
+            //         .then(response => response.json())
+            //         .then(data => {
+            //             if (data.weather_info) {
+            //                 let weatherHtml = "<ul>";
+            //                 data.weather_info.forEach(info => {
+            //                     weatherHtml += ` 
+            //                         <li>
+            //                             <strong>區域：</strong>${info.district_name} <br>
+            //                             <strong>溫度：</strong>${info.temperature}°C <br>
+            //                             <strong>天氣現象：</strong>${info.weather} <br>
+            //                             <strong>天氣描述：</strong>${info.weather_description} <br>
+            //                             <strong>降雨時間：</strong>${info.startime} <br>
+            //                         </li>
+            //                     `;
+            //                 });
+            //                 weatherHtml += "</ul>";
+                    
+            //                 document.getElementById("weatherInfo").innerHTML = weatherHtml;
+            //             } else {
+            //                 alert("找不到天氣資訊！");
+            //             }
+            //         })
+            //         .catch(error => {
+            //             console.error("取得天氣資料時出錯:", error);
+            //         });
+            // } else {
+            //     alert("無效的區域");
+            // }
+        };
+    </script>
+    
     
     
 </body>
