@@ -97,7 +97,35 @@ def extract_weather_info(weather_data, location_name, query_time):
                             time['StartTime']
                             for time in weather_element['Time']
                         ]
-                        
+                    # 這裡我們要篩選出與當前時間最接近的天氣資料
+                now = datetime.now()  # 當前時間
+                nearest_weather = None
+                min_time_diff = float('inf')  # 用於記錄最小時間差
+
+                # 將 start_times 轉換為 datetime 格式
+                for temp, weather, description, start_time in zip(temperatures, weathers, weather_descriptions, start_times):
+                    # 將 start_time 轉換為 datetime
+                    start_time_obj = datetime.fromisoformat(start_time[:-9])  # 假設 start_time 格式為 ISO 格式並去掉時區
+                    # print(start_time_obj)
+                    time_diff = abs((start_time_obj - now).total_seconds())  # 計算與當前時間的秒數差距
+
+                    # 找到最接近當前時間的天氣資料
+                    if time_diff < min_time_diff:
+                        min_time_diff = time_diff
+                        nearest_weather = {
+                            'city_name': city_name,
+                            'district_name': district_name,
+                            'temperature': temp,
+                            'weather': weather,
+                            'weather_description': description,
+                            'startime': start_time_obj.strftime("%Y-%m-%d %H:%M")  # 格式化為可讀的時間
+                        }
+                        # print(start_time_obj.strftime("%Y-%m-%d %H:%M"))
+                # 如果找到最接近的天氣資料，加入結果
+                if nearest_weather:
+                    weather_info.append(nearest_weather)
+
+    return weather_info  
                     # print(start_times)
                 # 提取降雨機率資料
                 # for weather_element in location['WeatherElement']:
@@ -118,19 +146,19 @@ def extract_weather_info(weather_data, location_name, query_time):
                 #         for time in weather_element["Time"]:  
                 #             weather_description = time["ElementValue"][0]['WeatherDescription']# 取出天氣描述
 
+                    
                             
-                            
-                for temperature, weather, descibe, start_times in zip(temperatures, weathers, weather_descriptions, start_times):
-                    weather_info.append({
-                        'city_name': city_name,
-                        'district_name': district_name,
-                        'temperature': temperature,
-                        'weather': weather,
-                        'weather_description': descibe,
-                        'startime': start_times
-                    })
-    print(type(weather_info))
-    return weather_info
+    #             for temperature, weather, descibe, start_times in zip(temperatures, weathers, weather_descriptions, start_times):
+    #                 weather_info.append({
+    #                     'city_name': city_name,
+    #                     'district_name': district_name,
+    #                     'temperature': temperature,
+    #                     'weather': weather,
+    #                     'weather_description': descibe,
+    #                     'startime': start_times
+    #                 })
+    # print(type(weather_info))
+    # return weather_info
 
 
 def print_weather_info(weather_info):
