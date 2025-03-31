@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>攝影輕旅行小助手</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color:  #dfdddd;
+            display: flex;
+            gap: 20px;
+            height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            width: 100%;
+        }
+        h2 {
+            text-align: center;
+            width: 100%;
+        }
+        /* h3 {
+            text-align: center;
+            width: 100%;
+        } */
+        
+        #map-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #map {
+            height: 90%;
+            width: 100%;
+            border-radius: 9px;
+            background-color: #ccc;
+        }
+ 
+        #route-controls {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 9px;
+            background: rgba(148, 147, 147, 0.61);
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #route-controls {
+        text-align: center; /* 所有內部元素水平置中 */
+    }
+    #route-controls label, #route-controls select, #route-controls button {
+        display: block; /* 每個元素佔一行 */
+        margin: 10px auto; /* 上下間距並自動左右置中 */
+    }
+    #travelTime {
+    font-size: 18px;
+    color: #333;
+    margin-top: 10px;
+    text-align: center;
+    font-weight: 600;  /* 設置文字為較中等粗細 */
+}
+        #info-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .info-box {
+            background: rgba(148, 147, 147, 0.61);
+            padding: 25px;
+            border-radius: 50px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        select, input, button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #dfdfdf;
+            margin-bottom: 10px; 
+        }
+        button {
+            background-color: #8b0aa58c;
+            color: rgb(255, 255, 255);
+            cursor: pointer;
+        }
+        ul {
+    list-style-type: none;
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column; /* 讓地圖和資訊區塊上下排列 */
+        height: auto; /* 讓內容可滾動 */
+    }
+
+    #map {
+        height: 300px; /* 手機上縮小地圖高度 */
+    }
+
+    #route-controls {
+        flex-direction: column; /* 讓選單按鈕排列成直的 */
+        align-items: center;
+    }
+
+    select, button {
+        width: 90%; /* 讓按鈕和選單變大，方便手機點擊 */
+    }
+}
+
+
+       /* 聊天框容器 */
+     #chat-container {
+    background-color: #f9f9f9;
+    padding: 5px;
+    border-radius: 20px;
+    width: 250px;
+    position: fixed;
+    bottom: 270px;
+    right: 20px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out;
+}
+
+.hidden {
+    transform: translateX(100%);
+}
+
+
+/* 訊息框 - 啟用滾動 */
+#chat-box {
+    flex-grow: 1;
+    max-height: 300px;  /* 增加高度 */
+    overflow-y: auto;   /* 啟用滾動 */
+    margin-bottom: 10px;
+    padding-right: 10px;
+    border: 1px solid #ddd;
+    background-color: white;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+}
+#chat-window {
+    max-height: 250px;  /* 設定最大高度，根據需求調整 */
+    overflow-y: auto;   /* 超出範圍時顯示滾動條 */
+    border: 1px solid #ddd; /* 增加邊框美觀 */
+    padding: 10px; 
+    background: white;
+}
+/* 訊息氣泡 */
+.message {
+    margin: 5px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f1f1f1;
+    max-width: 80%;
+    word-wrap: break-word;  /* 確保長文字不會溢出 */
+}
+
+/* 使用者訊息 */
+.user-message {
+    text-align: right;
+    background-color: #4CAF50;
+    color: white;
+    align-self: flex-end;
+}
+
+/* 小助手訊息 */
+.assistant-message {
+    text-align: left;
+    background-color: #2196F3;
+    color: white;
+    align-self: flex-start;
+}
+
+/* 輸入框 */
+.input-area {
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #ddd;
+    padding-top: 5px;
+}
+
+input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+/* 送出按鈕 */
+button {
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+}
+   
+/* 讓輸入框寬度 100% */
+.input-area {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* 讓按鈕置中 */
+.button-area {
+    text-align: center;  /* 水平置中 */
+    margin-top: 5px;     /* 距離輸入框一點間距 */
+}
+
+/* 設定按鈕樣式 */
+.button-area button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+    </style>
+</head>
+<body>
+    
+    <div id="map-container">
+        <div id="route-controls">
+            <label for="origin">出發地：</label>
+            <select id="origin">
+                <option value="current">目前位置</option>
+                {% for location in locations %}
+                    <option value="{{ location }}">{{ location }}</option>
+                {% endfor %}
+            </select>
+           
+            <label for="destination">目的地：</label>
+             
+            <select id="destination">
+                {% for location in locations %}
+                    <option value="{{ location }}">{{ location }}</option>
+                {% endfor %}
+            </select>
+            
+            <button id="routeButton">獲取路線</button>
+        </div>
+        <p id="travelTime" style="text-align: center; font-size: 20px; margin-top: 10px;"></p> <!-- 顯示預計行車時間的位置 -->
+        <div id="map"></div>
+        
+        
+    </div>
+    <div id="info-container">
+        <div class="info-box">
+            <h1>攝影輕旅行小助手</h1>
+        </div>
+        <div class="info-box">
+            <h2>天氣資訊</h2>
+            <div>
+                <label for="weatherSelect">選擇區域：</label>
+                <select id="weatherSelect">
+                    {% for location in locations %}
+                        <option value="{{ location }}">{{ location }}</option>
+                    {% endfor %}
+                </select>
+                <button id="confirmButton">確認</button>
+            </div>
+        
+            <div id="weather-info-container">
+                {% if weather_info %}
+                    <ul>
+                        {% for info in weather_info %}
+                            <li>
+                                <strong>▪ 區域：</strong>{{ info['district_name'] }} <br>
+                                <strong>▪ 溫度：</strong>{{ info['temperature'] }}°C <br>
+                                <strong>▪ 天氣現象：</strong>{{ info['weather'] }} <br>
+                                <strong>▪ 天氣描述：</strong>{{ info['weather_description'] }} <br>
+                                <strong>▪ 降雨時間：</strong>{{ info['startime'] }} <br>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>請選擇一個區域查看天氣資訊。</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        
+        <div class="info-box" id="shooting-advice-container">
+            <h3>拍攝建議</h3>
+            {{ shooting_advice | safe }}
+        </div>
+    </div>
+    <div id="chat-container">
+        <h2>與我們的小助手聊天</h2>
+        <!-- 小助手對話框 -->
+        <div id="chatbox">
+            <div id="chat-window">
+                <p><strong>小助手:</strong> 你好！需要建議嗎？</p>
+            </div>
+            <!-- 輸入區域 -->
+        <div class="input-area">
+            <input id="user-input" placeholder="輸入你的問題..." required>
+        </div>
+
+        <!-- 置中按鈕 -->
+        <div class="button-area">
+            <button onclick="sendMessage()">發送</button>
+        </div>
+            <!-- <input id="user-input" placeholder="輸入你的問題..." required>
+            <button onclick="sendMessage()"> 發送</button> -->
+        </div>
+
+            <!-- 按鈕來顯示/隱藏小助手 -->
+            <button onclick="toggleChatbox()">開啟/關閉 小助手</button>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script>
+
+window.onload = function () {
+    const savedLocation = localStorage.getItem("selectedWeatherLocation");
+    if (savedLocation) {
+        document.getElementById("weatherSelect").value = savedLocation;
+    }
+};
+
+document.getElementById("confirmButton").onclick = function () {
+    const selectedLocation = document.getElementById("weatherSelect").value;
+    // 儲存到 localStorage
+    localStorage.setItem("selectedWeatherLocation", selectedLocation);
+    
+    // 向後端請求該區域的天氣資訊
+    fetch(`/get_coordinates?city_name=${selectedLocation}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('selectedValue').textContent = data.error;
+                    } else {
+                        // 取得經緯度後，將使用者重定向到 weather.html，並傳遞參數
+                        const { latitude, longitude, city } = data;
+    
+                        const queryString = new URLSearchParams({
+                            city: city,
+                            lat: latitude,
+                            lng: longitude
+                        }).toString();
+    
+                        // 進行跳轉
+                        window.location.href = `/weather?${queryString}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        let map, marker, directionsService, directionsRenderer, userLocation;
+        const locationCoordinates= {
+            '中區': { lat: 24.1457, lng: 120.6835 },
+    '東區': { lat: 24.1479, lng: 120.7370 },
+    '南區': { lat: 24.1420, lng: 120.6610 },
+    '西區': { lat: 24.1460, lng: 120.6450 },
+    '北區': { lat: 24.1712, lng: 120.6802 },
+    '西屯區': { lat: 24.1681, lng: 120.6419 },
+    '南屯區': { lat: 24.1433, lng: 120.6533 },
+    '北屯區': { lat: 24.1798, lng: 120.6879 },
+    '太平區': { lat: 24.1410, lng: 120.7212 },
+    '大里區': { lat: 24.2195, lng: 120.6821 },
+    '霧峰區': { lat: 24.1857, lng: 120.7375 },
+    '烏日區': { lat: 24.1461, lng: 120.5843 },
+    '豐原區': { lat: 24.2620, lng: 120.7328 },
+    '后里區': { lat: 24.3078, lng: 120.7103 },
+    '石岡區': { lat: 24.2556, lng: 120.7481 },
+    '東勢區': { lat: 24.2965, lng: 120.8594 },
+    '大甲區': { lat: 24.3147, lng: 120.6185 },
+    '清水區': { lat: 24.3179, lng: 120.4532 },
+    '沙鹿區': { lat: 24.2359, lng: 120.5958 },
+    '梧棲區': { lat: 24.2349, lng: 120.5033 },
+    '龍井區': { lat: 24.2066, lng: 120.5374 },
+    '大肚區': { lat: 24.2112, lng: 120.5530 },
+    '大安區': { lat: 24.4244, lng: 120.4909 },
+    '健行區': { lat: 24.1820, lng: 120.7615 },
+    '大雅區': { lat: 24.2556, lng: 120.6154 },
+    '神岡區': { lat: 24.2977, lng: 120.6845 },
+    '新社區': { lat: 24.2689, lng: 120.8945 }
+};
+        
+
+        let placeMarkers = [];
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), { 
+                zoom: 14 ,
+                mapId: "74e5bfb0d7e26962"
+            });
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+            
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    map.setCenter(userLocation);
+                    new google.maps.Marker({
+                        position: userLocation,
+                        map: map,
+                        title: "您的位置"
+                    });
+                });
+            } else {
+                alert("無法獲取當前位置");
+            }
+        }
+        document.getElementById("routeButton").onclick = function () {
+    const origin = document.getElementById("origin").value;
+    const destination = document.getElementById("destination").value;
+
+    let originCoordinates = origin === "current" && userLocation ? userLocation : locationCoordinates[origin];
+    let destinationCoordinates = locationCoordinates[destination];
+
+    if (originCoordinates && destinationCoordinates) {
+        calculateRoute(originCoordinates, destinationCoordinates);
+        searchNearby(originCoordinates); // 🔍 搜尋出發地附近景點
+        searchNearby(destinationCoordinates); // 🔍 搜尋目的地附近景點
+    }
+};
+
+        function calculateRoute(origin, destination) {
+            let request = {
+                origin: origin,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING
+            };
+
+            directionsService.route(request, function (response, status) {
+                if (status === google.maps.DirectionsStatus.OK) {
+                    directionsRenderer.setDirections(response);
+                    let route = response.routes[0].legs[0];
+                    document.getElementById("travelTime").innerText = "預計行車時間：" + route.duration.text;
+
+                    // 搜尋出發地和目的地附近的景點
+                    searchNearby(origin);
+                    searchNearby(destination);
+                } else {
+                    alert("路線計算失敗：" + status);
+                }
+            });
+        }
+
+        async function searchNearby(location) {
+    if (!location) {
+        alert("無法獲取位置資訊");
+        return;
+    }
+
+    // 清除舊標記
+    placeMarkers.forEach(marker => marker.setMap(null));
+    placeMarkers = [];
+
+    const { Place, SearchNearbyRankPreference } = await google.maps.importLibrary("places");
+
+    let center = new google.maps.LatLng(location.lat, location.lng);
+    const request = {
+        fields: ["displayName", "location", "formattedAddress", "businessStatus"],
+        locationRestriction: {
+            center: center,
+            radius: 2000, // 搜尋半徑（公尺）
+        },
+        includedPrimaryTypes: [
+                        "tourist_attraction",   // 景點                        
+                        "park",                 // 公園                        
+                    ], // 限定景點類型
+        maxResultCount: 10,
+        rankPreference: SearchNearbyRankPreference.POPULARITY,
+        language: "zh-TW",
+    };
+
+    try {
+        //@ts-ignore
+        const { places } = await Place.searchNearby(request);
+
+        if (places.length) {
+            places.forEach((place) => {
+                let marker = new google.maps.Marker({
+                    map: map,
+                    position: place.location,
+                    title: place.displayName
+                });
+
+                // 儲存額外資料到 marker
+                marker.placeInfo = {
+                    name: place.displayName,
+                    address: place.formattedAddress || "地址不詳",
+                    status: place.businessStatus || "未知",
+                    location: place.location // ✨ 儲存座標
+                };
+
+                placeMarkers.push(marker);
+
+                // 監聽標記點擊事件，顯示資訊並規劃路線
+                google.maps.event.addListener(marker, "click", function() {
+                    const infoWindowContent = `
+                        <h3>${marker.placeInfo.name}</h3>
+                        <p>📍 地址: ${marker.placeInfo.address}</p>
+                        <p>🟢 營業狀態: ${marker.placeInfo.status}</p>
+                        <button id="routeToHere" style="margin-top:10px;">🚗 規劃路線</button>
+                    `;
+
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: infoWindowContent
+                    });
+
+                    infoWindow.open(map, marker); // 顯示資訊視窗
+
+                    // 監聽按鈕點擊事件
+                    setTimeout(() => {
+                        document.getElementById("routeToHere").onclick = function () {
+                            if (userLocation) {
+                                calculateRoute(userLocation, marker.placeInfo.location);
+                            } else {
+                                alert("無法獲取您的當前位置");
+                            }
+                        };
+                    }, 100); // 延遲執行，確保按鈕已經渲染
+                });
+            });
+        } else {
+            console.log("附近沒有找到景點");
+        }
+    } catch (error) {
+        console.error("搜尋附近景點失敗:", error);
+    }
+}
+        
+
+function toggleChatbox() {
+        var chatbox = document.getElementById('chatbox');
+        chatbox.style.display = chatbox.style.display === 'none' ? 'block' : 'none';
+    }
+
+// 監聽滾動事件，判斷是否顯示「回到頂部」按鈕
+document.getElementById('chat-window').addEventListener('scroll', checkScrollButton);
+
+    function sendMessage() {
+        var userInput = document.getElementById('user-input').value;
+        if (!userInput) return;
+
+        var chatWindow = document.getElementById('chat-window');
+        chatWindow.innerHTML += `<p><strong>你:</strong> ${userInput}</p>`;
+
+        // 發送訊息到 Flask 伺服器
+        fetch('/chatbot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userInput })
+        })
+        .then(response => response.json())
+        .then(data => {
+            chatWindow.innerHTML += `<p><strong>小助手:</strong> ${data.response}</p>`;
+            document.getElementById('user-input').value = '';  // 清空輸入框
+        })
+        .catch(error => {
+            console.error('錯誤:', error);
+            chatWindow.innerHTML += `<p><strong>小助手:</strong> 抱歉，發生錯誤。</p>`;
+        });
+    }
+
+
+    function scrollToBottom() {
+    var chatWindow = document.getElementById('chat-window');
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+
+function toggleChatbox() {
+    var chatbox = document.getElementById("chat-container");
+    chatbox.classList.toggle("hidden");
+}
+</script>
+
+</script>
+
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={api}&callback=initMap&language=zh-TW"></script>
+</body>
+</html>

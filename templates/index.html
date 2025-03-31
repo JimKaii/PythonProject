@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>滾動選擇欄範例</title>
+    <title>攝影輕旅行小助手</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,14 +12,14 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            background-color: #dfdddd;
         }
 
         .container {
-            background-color: white;
+            background-color: rgba(19, 153, 231, 0.521);
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 25px rgba(150, 150, 149, 0.459);
             text-align: center;
         }
 
@@ -28,7 +28,7 @@
             font-size: 16px;
             width: 200px;
             border-radius: 5px;
-            border: 1px solid #ccc;
+            border: 1px solid #78f5cf9d;
             margin-bottom: 20px;
         }
 
@@ -37,19 +37,19 @@
             font-size: 16px;
             border-radius: 5px;
             border: none;
-            background-color: #007bff;
+            background-color: #8888889c;
             color: white;
             cursor: pointer;
         }
 
         button:hover {
-            background-color: #0056b3;
+            background-color: #d119e9;
         }
 
         #selectedValue {
             margin-top: 20px;
             font-size: 18px;
-            color: #333;
+            color: #ca4646;
         }
     </style>
 </head>
@@ -78,7 +78,7 @@
     
         <!-- 顯示選擇結果 -->
         <div id="result" style="margin-top: 20px;">
-            <p>您選擇的區域：<span id="selectedRegion"></span> - <span id="selectedLocation"></span></p>
+            <p><span id="selectedRegion"></span> - <span id="selectedLocation"></span></p>
         </div>
     </div>
     
@@ -104,7 +104,8 @@
                 '北區', '中區', '東區', '西區', '南區', '西屯區', '南屯區', '北屯區'
             ]
         };
-    
+        
+        
         // 當區域類型改變時，更新具體區域選單
         regionSelect.addEventListener('change', function() {
             const selectedRegionValue = regionSelect.value;
@@ -133,6 +134,8 @@
             // 顯示用戶選擇的結果
             selectedRegion.textContent = region;
             selectedLocation.textContent = location;
+
+            
     
             // 發送 AJAX 請求
             fetch(`/get_coordinates?city_name=${location}`)
