@@ -28,12 +28,15 @@ pip install -r requirements.txt
 請在對應的程式碼中填入 API Key：
 
 1️⃣ cwa_crawler.py
+
 CWA_API_KEY = "你的中央氣象局 API Key"
 
 2️⃣ flask_ask_weather.py
+
 GOOGLE_MAPS_API_KEY = "你的 Google Maps API Key"
 
 3️⃣templates/text.html
+
 請在 HTML 文件的最後填入 Google API Key
 <script src="https://maps.googleapis.com/maps/api/js?key=你的GoogleAPIKey"></script>
 ***
